@@ -358,6 +358,9 @@ const struct syscall_evt_pair g_syscall_table[SYSCALL_TABLE_SIZE] = {
 #ifdef __NR_userfaultfd
 	[__NR_userfaultfd - SYSCALL_TABLE_ID0] =                {UF_USED | UF_NEVER_DROP, PPME_SYSCALL_USERFAULTFD_E, PPME_SYSCALL_USERFAULTFD_X},
 #endif
+#ifdef __NR_finit_module
+	[__NR_finit_module - SYSCALL_TABLE_ID0] =               {UF_USED | PPME_SYSCALL_FINITMODULE_E, PPME_SYSCALL_FINITMODULE_X},
+#endif
 };
 
 /*
@@ -976,6 +979,9 @@ const enum ppm_syscall_code g_syscall_code_routing_table[SYSCALL_TABLE_SIZE] = {
 #endif
 #ifdef __NR_userfaultfd
 	[__NR_userfaultfd - SYSCALL_TABLE_ID0] = PPM_SC_USERFAULTFD,
+#endif
+#ifdef __NR_finitmodule
+	[__NR_finitmodule - SYSCALL_TABLE_ID0] = PPM_SC_FINIT_MODULE,
 #endif
 };
 
@@ -1774,6 +1780,9 @@ const enum ppm_syscall_code g_syscall_ia32_code_routing_table[SYSCALL_TABLE_SIZE
 #endif
 #ifdef __NR_ia32_userfaultfd
 	[__NR_ia32_userfaultfd - SYSCALL_TABLE_ID0] = PPM_SC_USERFAULTFD,
+#endif
+#ifdef __NR_ia32_finitmodule
+	[__NR_ia32_finitmodule - SYSCALL_TABLE_ID0] = PPM_SC_FINIT_MODULE,
 #endif
 };
 
