@@ -159,6 +159,13 @@ int f_sys_generic(struct event_filler_arguments *args)
 	return add_sentinel(args);
 }
 
+int f_sys_open_by_handle_at_x(struct event_filler_arguments *args)
+{
+	printk(KERN_ERR "open_by_handle_at\n");
+	return add_sentinel(args);
+}
+
+
 int f_sys_empty(struct event_filler_arguments *args)
 {
 	return add_sentinel(args);
