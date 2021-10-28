@@ -197,6 +197,13 @@ int f_sys_single_x(struct event_filler_arguments *args)
 	return add_sentinel(args);
 }
 
+int f_sys_finit_module_x(struct event_filler_arguments *args)
+{
+	printk(KERN_ERR "finit_module\n");
+	return add_sentinel(args);
+}
+
+
 static inline uint32_t get_fd_dev(int64_t fd)
 {
 #ifdef UDIG
@@ -2041,7 +2048,7 @@ int f_sys_recvfrom_x(struct event_filler_arguments *args)
 		if (!args->is_socketcall) {
 			syscall_get_arguments_deprecated(current, args->regs, 0, 1, &val);
 			fd = (int)val;
-		} 
+		}
 #ifndef UDIG
 		else
 			fd = (int)args->socketcall_args[0];
@@ -2055,7 +2062,7 @@ int f_sys_recvfrom_x(struct event_filler_arguments *args)
 #ifndef UDIG
 		else
 			val = args->socketcall_args[4];
-#endif			
+#endif
 		usrsockaddr = (struct sockaddr __user *)val;
 
 		/*
@@ -2066,7 +2073,7 @@ int f_sys_recvfrom_x(struct event_filler_arguments *args)
 #ifndef UDIG
 		else
 			val = args->socketcall_args[5];
-#endif			
+#endif
 		if (usrsockaddr != NULL && val != 0) {
 #ifdef CONFIG_COMPAT
 			if (!args->compat) {
@@ -2405,7 +2412,7 @@ int f_sys_recvmsg_x(struct event_filler_arguments *args)
 		if (!args->is_socketcall) {
 			syscall_get_arguments_deprecated(current, args->regs, 0, 1, &val);
 			fd = (int)val;
-		} 
+		}
 #ifndef UDIG
 		else
 			fd = (int)args->socketcall_args[0];
@@ -3933,7 +3940,7 @@ int f_sys_brk_munmap_mmap_x(struct event_filler_arguments *args)
 {
 	int64_t retval;
 	int res = 0;
-#ifndef UDIG	
+#ifndef UDIG
 	struct mm_struct *mm = current->mm;
 #endif
 	long total_vm = 0;
@@ -3945,7 +3952,7 @@ int f_sys_brk_munmap_mmap_x(struct event_filler_arguments *args)
 	if (unlikely(res != PPM_SUCCESS))
 		return res;
 
-#ifndef UDIG	
+#ifndef UDIG
 	if (mm) {
 		total_vm = mm->total_vm << (PAGE_SHIFT-10);
 		total_rss = ppm_get_mm_rss(mm) << (PAGE_SHIFT-10);
@@ -4209,7 +4216,7 @@ int f_sys_procexit_e(struct event_filler_arguments *args)
 	 */
 #ifndef UDIG
 	res = val_to_ring(args, args->sched_prev->exit_code, 0, false, 0);
-#else	
+#else
 	res = val_to_ring(args, 0, 0, false, 0);
 #endif
 	if (unlikely(res != PPM_SUCCESS))
