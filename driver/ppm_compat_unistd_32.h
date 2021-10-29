@@ -356,11 +356,10 @@
 #define __NR_ia32_process_vm_writev	348
 #define __NR_ia32_renameat2 349
 #define __NR_ia32_userfaultfd 350
-#define __NR_ia32_finit_module 351
 
 #ifdef __KERNEL__
 
-#define NR_ia32_syscalls 352
+#define NR_ia32_syscalls 351
 
 #define __ARCH_WANT_IPC_PARSE_VERSION
 #define __ARCH_WANT_OLD_READDIR
