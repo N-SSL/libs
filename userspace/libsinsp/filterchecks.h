@@ -198,27 +198,9 @@ private:
 
 	std::set<uint16_t> s_all_event_types;
 
-friend class sinsp_filter_check_list;
+friend class filter_check_list;
 friend class sinsp_filter_optimizer;
 friend class chk_compare_helper;
-};
-
-//
-// Global class that stores the list of filtercheck plugins and offers
-// functions to work with it.
-//
-class sinsp_filter_check_list
-{
-public:
-	sinsp_filter_check_list();
-	~sinsp_filter_check_list();
-	void add_filter_check(sinsp_filter_check* filter_check);
-	void get_all_fields(vector<const filter_check_info*>* list);
-	sinsp_filter_check* new_filter_check_from_another(sinsp_filter_check *chk);
-	sinsp_filter_check* new_filter_check_from_fldname(const string& name, sinsp* inspector, bool do_exact_check);
-
-private:
-	vector<sinsp_filter_check*> m_check_list;
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -399,9 +381,9 @@ private:
 };
 
 //
-// event checks
+// filterchecks that will work on any generic event
 //
-class sinsp_filter_check_event : public sinsp_filter_check
+class sinsp_filter_check_gen_event : public sinsp_filter_check
 {
 public:
 	enum check_type
@@ -411,69 +393,92 @@ public:
 		TYPE_TIME_S = 2,
 		TYPE_TIME_ISO8601 = 3,
 		TYPE_DATETIME = 4,
-		TYPE_RAWTS = 5,
-		TYPE_RAWTS_S = 6,
-		TYPE_RAWTS_NS = 7,
-		TYPE_RELTS = 8,
-		TYPE_RELTS_S = 9,
-		TYPE_RELTS_NS = 10,
-		TYPE_LATENCY = 11,
-		TYPE_LATENCY_S = 12,
-		TYPE_LATENCY_NS = 13,
-		TYPE_LATENCY_QUANTIZED = 14,
-		TYPE_LATENCY_HUMAN = 15,
-		TYPE_DELTA = 16,
-		TYPE_DELTA_S = 17,
-		TYPE_DELTA_NS = 18,
-		TYPE_RUNTIME_TIME_OUTPUT_FORMAT = 19,
-		TYPE_DIR = 20,
-		TYPE_TYPE = 21,
-		TYPE_TYPE_IS = 22,
-		TYPE_SYSCALL_TYPE = 23,
-		TYPE_CATEGORY = 24,
-		TYPE_CPU = 25,
-		TYPE_ARGS = 26,
-		TYPE_ARGSTR = 27,
-		TYPE_ARGRAW = 28,
-		TYPE_INFO = 29,
-		TYPE_BUFFER = 30,
-		TYPE_BUFLEN = 31,
-		TYPE_RESSTR = 32,
-		TYPE_RESRAW = 33,
-		TYPE_FAILED = 34,
-		TYPE_ISIO = 35,
-		TYPE_ISIO_READ = 36,
-		TYPE_ISIO_WRITE = 37,
-		TYPE_IODIR = 38,
-		TYPE_ISWAIT = 39,
-		TYPE_WAIT_LATENCY = 40,
-		TYPE_ISSYSLOG = 41,
-		TYPE_COUNT = 42,
-		TYPE_COUNT_ERROR = 43,
-		TYPE_COUNT_ERROR_FILE = 44,
-		TYPE_COUNT_ERROR_NET = 45,
-		TYPE_COUNT_ERROR_MEMORY = 46,
-		TYPE_COUNT_ERROR_OTHER = 47,
-		TYPE_COUNT_EXIT = 48,
-		TYPE_COUNT_PROCINFO = 49,
-		TYPE_COUNT_THREADINFO = 50,
-		TYPE_AROUND = 51,
-		TYPE_ABSPATH = 52,
-		TYPE_BUFLEN_IN = 53,
-		TYPE_BUFLEN_OUT = 54,
-		TYPE_BUFLEN_FILE = 55,
-		TYPE_BUFLEN_FILE_IN = 56,
-		TYPE_BUFLEN_FILE_OUT = 57,
-		TYPE_BUFLEN_NET = 58,
-		TYPE_BUFLEN_NET_IN = 59,
-		TYPE_BUFLEN_NET_OUT = 60,
-		TYPE_ISOPEN_READ = 61,
-		TYPE_ISOPEN_WRITE = 62,
-		TYPE_INFRA_DOCKER_NAME = 63,
-		TYPE_INFRA_DOCKER_CONTAINER_ID = 64,
-		TYPE_INFRA_DOCKER_CONTAINER_NAME = 65,
-		TYPE_INFRA_DOCKER_CONTAINER_IMAGE = 66,
-		TYPE_ISOPEN_EXEC = 67,
+		TYPE_DATETIME_S = 5,
+		TYPE_RAWTS = 6,
+		TYPE_RAWTS_S = 7,
+		TYPE_RAWTS_NS = 8,
+		TYPE_RELTS = 9,
+		TYPE_RELTS_S = 10,
+		TYPE_RELTS_NS = 11,
+	};
+
+	sinsp_filter_check_gen_event();
+	~sinsp_filter_check_gen_event();
+	sinsp_filter_check* allocate_new();
+	uint8_t* extract(sinsp_evt *evt, OUT uint32_t* len, bool sanitize_strings = true);
+	Json::Value extract_as_js(sinsp_evt *evt, OUT uint32_t* len);
+
+	uint64_t m_u64val;
+	string m_strstorage;
+};
+
+//
+// event checks
+//
+class sinsp_filter_check_event : public sinsp_filter_check
+{
+public:
+	enum check_type
+	{
+		TYPE_LATENCY = 0,
+		TYPE_LATENCY_S = 1,
+		TYPE_LATENCY_NS = 2,
+		TYPE_LATENCY_QUANTIZED = 3,
+		TYPE_LATENCY_HUMAN = 4,
+		TYPE_DELTA = 5,
+		TYPE_DELTA_S = 6,
+		TYPE_DELTA_NS = 7,
+		TYPE_RUNTIME_TIME_OUTPUT_FORMAT = 8,
+		TYPE_DIR = 9,
+		TYPE_TYPE = 10,
+		TYPE_TYPE_IS = 11,
+		TYPE_SYSCALL_TYPE = 12,
+		TYPE_CATEGORY = 13,
+		TYPE_CPU = 14,
+		TYPE_ARGS = 15,
+		TYPE_ARGSTR = 16,
+		TYPE_ARGRAW = 17,
+		TYPE_INFO = 18,
+		TYPE_BUFFER = 19,
+		TYPE_BUFLEN = 20,
+		TYPE_RESSTR = 21,
+		TYPE_RESRAW = 22,
+		TYPE_FAILED = 23,
+		TYPE_ISIO = 24,
+		TYPE_ISIO_READ = 25,
+		TYPE_ISIO_WRITE = 26,
+		TYPE_IODIR = 27,
+		TYPE_ISWAIT = 28,
+		TYPE_WAIT_LATENCY = 29,
+		TYPE_ISSYSLOG = 30,
+		TYPE_COUNT = 31,
+		TYPE_COUNT_ERROR = 32,
+		TYPE_COUNT_ERROR_FILE = 33,
+		TYPE_COUNT_ERROR_NET = 34,
+		TYPE_COUNT_ERROR_MEMORY = 35,
+		TYPE_COUNT_ERROR_OTHER = 36,
+		TYPE_COUNT_EXIT = 37,
+		TYPE_COUNT_PROCINFO = 38,
+		TYPE_COUNT_THREADINFO = 39,
+		TYPE_AROUND = 40,
+		TYPE_ABSPATH = 41,
+		TYPE_BUFLEN_IN = 42,
+		TYPE_BUFLEN_OUT = 43,
+		TYPE_BUFLEN_FILE = 44,
+		TYPE_BUFLEN_FILE_IN = 45,
+		TYPE_BUFLEN_FILE_OUT = 46,
+		TYPE_BUFLEN_NET = 47,
+		TYPE_BUFLEN_NET_IN = 48,
+		TYPE_BUFLEN_NET_OUT = 49,
+		TYPE_ISOPEN_READ = 50,
+		TYPE_ISOPEN_WRITE = 51,
+		TYPE_INFRA_DOCKER_NAME = 52,
+		TYPE_INFRA_DOCKER_CONTAINER_ID = 53,
+		TYPE_INFRA_DOCKER_CONTAINER_NAME = 54,
+		TYPE_INFRA_DOCKER_CONTAINER_IMAGE = 55,
+		TYPE_ISOPEN_EXEC = 56,
+		TYPE_PLUGIN_NAME = 57,
+		TYPE_PLUGIN_INFO = 58,
 	};
 
 	sinsp_filter_check_event();

@@ -28,6 +28,7 @@ limitations under the License.
 #include <tuples.h>
 #include <scap.h>
 #include "json/json.h"
+#include "../common/strlcpy.h"
 
 class sinsp_evttables;
 typedef union _sinsp_sockinfo sinsp_sockinfo;
@@ -97,7 +98,7 @@ public:
 	//
 	// Get the list of filtercheck fields
 	//
-	static void get_filtercheck_fields_info(std::vector<const filter_check_info*>* list);
+	static void get_filtercheck_fields_info(std::vector<const filter_check_info*>& list);
 
 	static uint64_t get_current_time_ns();
 

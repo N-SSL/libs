@@ -963,7 +963,9 @@ enum ppm_event_type {
 	PPME_SYSCALL_USERFAULTFD_X = 321,
 	PPME_SYSCALL_OPEN_BY_HANDLE_AT_E = 322,
 	PPME_SYSCALL_OPEN_BY_HANDLE_AT_X = 323,
-	PPM_EVENT_MAX = 324
+	PPME_PLUGINEVENT_E = 324,
+	PPME_PLUGINEVENT_X = 325,
+	PPM_EVENT_MAX = 326
 };
 /*@}*/
 
@@ -1335,7 +1337,8 @@ enum ppm_event_flags {
 	EF_WAITS = (1 << 7), /* This event reads data from an FD. */
 	EF_SKIPPARSERESET = (1 << 8), /* This event shouldn't pollute the parser lastevent state tracker. */
 	EF_OLD_VERSION = (1 << 9), /* This event is kept for backward compatibility */
-	EF_DROP_SIMPLE_CONS = (1 << 10) /* This event can be skipped by consumers that privilege low overhead to full event capture */
+	EF_DROP_SIMPLE_CONS = (1 << 10), /* This event can be skipped by consumers that privilege low overhead to full event capture */
+	EF_LARGE_PAYLOAD = (1 << 11), /* This event has a large payload, ie: up to UINT32_MAX bytes. DO NOT USE ON syscalls-driven events!!! */
 };
 
 /*

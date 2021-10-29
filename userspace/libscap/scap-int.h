@@ -20,6 +20,7 @@ limitations under the License.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "settings.h"
+#include "plugin_info.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -123,6 +124,8 @@ struct scap
 	FILE* m_file;
 #endif
 	char* m_file_evt_buf;
+	size_t m_file_evt_buf_size;
+
 	uint32_t m_last_evt_dump_flags;
 	char m_lasterr[SCAP_LASTERR_SIZE];
 
@@ -174,6 +177,28 @@ struct scap
 	// The number of events that were skipped due to the comm
 	// matching an entry in m_suppressed_comms.
 	uint64_t m_num_suppressed_evts;
+
+	//
+	// Plugin-related state
+	//
+	source_plugin_info* m_input_plugin;
+	uint8_t* m_input_plugin_evt_storage;
+	uint32_t m_input_plugin_evt_storage_len;
+
+	// The number of items held in batch_evts
+	uint32_t m_input_plugin_batch_nevts;
+
+	// A set of events returned from next_batch. The array is
+	// allocated and must be free()d when done.
+	ss_plugin_event* m_input_plugin_batch_evts;
+
+	// The current position into the above arrays (0-indexed),
+	// reflecting how many of the above items have been returned
+	// via a call to next().
+	uint32_t m_input_plugin_batch_idx;
+
+	// The return value from the last call to next_batch().
+	ss_plugin_rc m_input_plugin_last_batch_res;
 };
 
 typedef enum ppm_dumper_type
@@ -202,7 +227,7 @@ struct scap_ns_socket_list
 // Misc stuff
 //
 #define MEMBER_SIZE(type, member) sizeof(((type *)0)->member)
-#define FILE_READ_BUF_SIZE 65536
+#define FILE_READ_BUF_SIZE (1 << 16) // UINT16_MAX + 1, ie: 65536
 
 //
 // Internal library functions
