@@ -35,6 +35,8 @@ limitations under the License.
 #include "cyclewriter.h"
 #include "protodecoder.h"
 #include "dns_manager.h"
+#include "plugin.h"
+
 
 #ifndef CYGWING_AGENT
 #ifndef MINIMAL_BUILD
@@ -209,6 +211,7 @@ sinsp::~sinsp()
 	sinsp_dns_manager::get().cleanup();
 #endif
 #endif
+	m_plugins_list.clear();
 }
 
 void sinsp::add_protodecoders()
@@ -483,6 +486,19 @@ void sinsp::open_live_common(uint32_t timeout_ms, scap_mode_t mode)
 
 	add_suppressed_comms(oargs);
 
+	//
+	// If a plugin was configured, pass it to scap and set the capture mode to
+	// SCAP_MODE_PLUGIN.
+	//
+	if(m_input_plugin)
+	{
+		sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(m_input_plugin.get());
+		oargs.input_plugin = splugin->plugin_info();
+		oargs.input_plugin_params = (char*)m_input_plugin_open_params.c_str();
+		m_mode = SCAP_MODE_PLUGIN;
+		oargs.mode = SCAP_MODE_PLUGIN;
+	}
+
 	int32_t scap_rc;
 	m_h = scap_open(oargs, error, &scap_rc);
 
@@ -573,7 +589,7 @@ int64_t sinsp::get_file_size(const std::string& fname, char *error)
 	}
 #endif
 	if(errdesc.empty()) errdesc = get_error_desc(err_str);
-	strncpy(error, errdesc.c_str(), errdesc.size() > SCAP_LASTERR_SIZE ? SCAP_LASTERR_SIZE : errdesc.size());
+	strlcpy(error, errdesc.c_str(), SCAP_LASTERR_SIZE);
 	return -1;
 }
 
@@ -1585,6 +1601,82 @@ void sinsp::set_statsd_port(const uint16_t port)
 	}
 }
 
+void sinsp::add_plugin(std::shared_ptr<sinsp_plugin> plugin)
+{
+	for(auto& it : m_plugins_list)
+	{
+		if(it->name() == plugin->name())
+		{
+			throw sinsp_exception("found multiple plugins with name " + it->name() + ". Aborting.");
+		}
+	}
+
+	m_plugins_list.push_back(plugin);
+}
+
+void sinsp::set_input_plugin(string plugin_name)
+{
+	for(auto& it : m_plugins_list)
+	{
+		if(it->name() == plugin_name)
+		{
+			if(it->type() != TYPE_SOURCE_PLUGIN)
+			{
+				throw sinsp_exception("plugin " + plugin_name + " is not a source plugin and cannot be used as input.");
+			}
+
+			m_input_plugin = it;
+			return;
+		}
+	}
+
+	throw sinsp_exception("plugin " + plugin_name + " does not exist");
+}
+
+void sinsp::set_input_plugin_open_params(string params)
+{
+	m_input_plugin_open_params = params;
+}
+
+const std::vector<std::shared_ptr<sinsp_plugin>>& sinsp::get_plugins()
+{
+	return m_plugins_list;
+}
+
+std::shared_ptr<sinsp_plugin> sinsp::get_plugin_by_id(uint32_t plugin_id)
+{
+	for(auto &it : m_plugins_list)
+	{
+		if(it->type() == TYPE_SOURCE_PLUGIN)
+		{
+			sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(it.get());
+			if(splugin->id() == plugin_id)
+			{
+				return it;
+			}
+		}
+	}
+
+	return std::shared_ptr<sinsp_plugin>();
+}
+
+std::shared_ptr<sinsp_plugin> sinsp::get_source_plugin_by_source(const std::string &source)
+{
+	for(auto &it : m_plugins_list)
+	{
+		if(it->type() == TYPE_SOURCE_PLUGIN)
+		{
+			sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(it.get());
+			if(splugin->event_source() == source)
+			{
+				return it;
+			}
+		}
+	}
+
+	return std::shared_ptr<sinsp_plugin>();
+}
+
 void sinsp::stop_capture()
 {
 	if(scap_stop_capture(m_h) != SCAP_SUCCESS)
@@ -1728,12 +1820,12 @@ const unordered_map<uint32_t, scap_groupinfo*>* sinsp::get_grouplist()
 }
 
 #ifdef HAS_FILTERING
-void sinsp::get_filtercheck_fields_info(OUT vector<const filter_check_info*>* list)
+void sinsp::get_filtercheck_fields_info(OUT vector<const filter_check_info*>& list)
 {
 	sinsp_utils::get_filtercheck_fields_info(list);
 }
 #else
-void sinsp::get_filtercheck_fields_info(OUT vector<const filter_check_info*>* list)
+void sinsp::get_filtercheck_fields_info(OUT vector<const filter_check_info*>& list)
 {
 }
 #endif
@@ -1921,7 +2013,7 @@ bool sinsp::setup_cycle_writer(string base_file_name, int rollover_mb, int durat
 	return m_cycle_writer->setup(base_file_name, rollover_mb, duration_seconds, file_limit, event_limit, &m_dumper);
 }
 
-double sinsp::get_read_progress()
+double sinsp::get_read_progress_file()
 {
 	if(m_input_fd != 0)
 	{
@@ -1954,6 +2046,60 @@ void sinsp::set_metadata_download_params(uint32_t data_max_b,
 	m_metadata_download_params.m_data_max_b = data_max_b;
 	m_metadata_download_params.m_data_chunk_wait_us = data_chunk_wait_us;
 	m_metadata_download_params.m_data_watch_freq_sec = data_watch_freq_sec;
+}
+
+void sinsp::get_read_progress_plugin(OUT double* nres, string* sres)
+{
+	ASSERT(nres != NULL);
+	ASSERT(sres != NULL);
+	if(!nres || !sres)
+	{
+		return;
+	}
+
+	if (!m_input_plugin)
+	{
+		*nres = -1;
+		*sres = "No Input Plugin";
+
+		return;
+	}
+
+	sinsp_source_plugin *splugin = static_cast<sinsp_source_plugin *>(m_input_plugin.get());
+
+	uint32_t nplg;
+	*sres = splugin->get_progress(nplg);
+
+	*nres = ((double)nplg) / 100;
+}
+
+double sinsp::get_read_progress()
+{
+	if(is_plugin())
+	{
+		double res = 0;
+		get_read_progress_plugin(&res, NULL);
+		return res;
+	}
+	else
+	{
+		return get_read_progress_file();
+	}
+}
+
+double sinsp::get_read_progress_with_str(OUT string* progress_str)
+{
+	if(is_plugin())
+	{
+		double res;
+		get_read_progress_plugin(&res, progress_str);
+		return res;
+	}
+	else
+	{
+		*progress_str = "";
+		return get_read_progress_file();
+	}
 }
 
 bool sinsp::remove_inactive_threads()

@@ -180,8 +180,7 @@ void sinsp_logger::log(std::string msg, const severity sev)
 	if(m_flags & sinsp_logger::OT_ENCODE_SEV)
 	{
 		char sev_buf[ENCODE_LEN + 1];
-		strncpy(sev_buf, encode_severity(sev), sizeof(sev_buf));
-		sev_buf[sizeof(sev_buf) - 1] = 0;
+		strlcpy(sev_buf, encode_severity(sev), sizeof(sev_buf));
 		msg.insert(0, sev_buf);
 	}
 
