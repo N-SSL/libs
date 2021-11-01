@@ -163,7 +163,6 @@ int f_sys_open_by_handle_at_x(struct event_filler_arguments *args)
 {
 	syscall_arg_t val;
 	syscall_arg_t flags;
-	syscall_arg_t modes;
 	struct file_handle __user * handle;
 	int res;
 	int64_t retval;
@@ -204,7 +203,7 @@ int f_sys_open_by_handle_at_x(struct event_filler_arguments *args)
 	if (unlikely(res != PPM_SUCCESS))
 		return res;
 
-	printk(KERN_ERR "open_by_handle_at  fd: %lld  handle: %p  modes: %lo\n", retval, handle, modes);
+	printk(KERN_ERR "open_by_handle_at  fd: %lld  handle: %p  flags: %lo\n", retval, handle, flags);
 	return add_sentinel(args);
 }
 
