@@ -161,7 +161,50 @@ int f_sys_generic(struct event_filler_arguments *args)
 
 int f_sys_open_by_handle_at_x(struct event_filler_arguments *args)
 {
-	printk(KERN_ERR "open_by_handle_at\n");
+	syscall_arg_t val;
+	syscall_arg_t flags;
+	syscall_arg_t modes;
+	struct file_handle __user * handle;
+	int res;
+	int64_t retval;
+
+	/*
+	 * fd
+	 */
+	retval = (int64_t)syscall_get_return_value(current, args->regs);
+	res = val_to_ring(args, retval, 0, false, 0);
+	if (unlikely(res != PPM_SUCCESS))
+		return res;
+
+
+	/*
+	 * dirfd
+	 */
+	syscall_get_arguments_deprecated(current, args->regs, 0, 1, &val);
+
+	if ((int)val == AT_FDCWD)
+		val = PPM_AT_FDCWD;
+
+	res = val_to_ring(args, val, 0, false, 0);
+	if (unlikely(res != PPM_SUCCESS))
+		return res;
+
+	/**
+	 * Handle
+	 */
+	syscall_get_arguments_deprecated(current, args->regs, 1, 1, &val);
+	handle = (struct file_handle __user *)val;
+
+	/*
+	 * Flags
+	 * Note that we convert them into the ppm portable representation before pushing them to the ring
+	 */
+	syscall_get_arguments_deprecated(current, args->regs, 2, 1, &flags);
+	res = val_to_ring(args, open_flags_to_scap(flags), 0, false, 0);
+	if (unlikely(res != PPM_SUCCESS))
+		return res;
+
+	printk(KERN_ERR "open_by_handle_at  fd: %lld  handle: %p  modes: %lo\n", retval, handle, modes);
 	return add_sentinel(args);
 }
 
