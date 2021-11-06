@@ -974,13 +974,28 @@ u16 pack_addr(struct sockaddr *usrsockaddr,
 		size = 1;
 
 		*targetbuf = socket_family_to_scap((u8)family);
-		dest = strncpy(targetbuf + 1,
+		if(usrsockaddr_un->sun_path[0]){
+			dest = strncpy(targetbuf + 1,
 					usrsockaddr_un->sun_path,
 					UNIX_PATH_MAX);	/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
 
-		dest[UNIX_PATH_MAX - 1] = 0;
-		size += (u16)strlen(dest) + 1;
-
+			dest[UNIX_PATH_MAX - 1] = 0;
+			//printk(KERN_INFO "pack_addr :%s", dest);
+			size += (u16)strlen(dest) + 1;
+		}else{
+			// char* abstract_path = malloc( UNIX_PATH_MAX * sizeof(char));
+			// abstract_path[0]='@';
+			dest= strncpy(targetbuf + 1,
+					"@",
+					1);
+			strncpy(targetbuf + 2,
+					usrsockaddr_un->sun_path+1,
+					UNIX_PATH_MAX-1);	/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
+			
+			dest[UNIX_PATH_MAX - 1] = 0;
+			//printk(KERN_INFO "pack_addr :%s", dest);
+			size += (u16)strlen(dest) + 1;
+		}
 		break;
 	default:
 		size = 0;
@@ -1233,10 +1248,21 @@ u16 fd_to_socktuple(int fd,
 		}
 
 		ASSERT(us_name);
-		dest = strncpy(targetbuf + 1 + 8 + 8,
+		if(us_name[0]){
+			dest = strncpy(targetbuf + 1 + 8 + 8,
 					(char *)us_name,
-					UNIX_PATH_MAX);	/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
-
+					UNIX_PATH_MAX);
+		}else{
+			
+			dest= strncpy(targetbuf + 1 + 8 + 8,
+					"@",
+					1);
+			strncpy(targetbuf + 1 + 8 + 8 + 1,
+					(char *)us_name+1,
+					UNIX_PATH_MAX-1);
+		}
+			/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
+		//printk(KERN_INFO "fd_to_socktuple :%s", dest);
 		dest[UNIX_PATH_MAX - 1] = 0;
 		size += strlen(dest) + 1;
 	#endif /* UDIG */
