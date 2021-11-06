@@ -980,20 +980,19 @@ u16 pack_addr(struct sockaddr *usrsockaddr,
 					UNIX_PATH_MAX);	/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
 
 			dest[UNIX_PATH_MAX - 1] = 0;
-			//printk(KERN_INFO "pack_addr :%s", dest);
+			
 			size += (u16)strlen(dest) + 1;
 		}else{
-			// char* abstract_path = malloc( UNIX_PATH_MAX * sizeof(char));
-			// abstract_path[0]='@';
+			
 			dest= strncpy(targetbuf + 1,
 					"@",
 					1);
 			strncpy(targetbuf + 2,
 					usrsockaddr_un->sun_path+1,
-					UNIX_PATH_MAX-1);	/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
+					UNIX_PATH_MAX-1);	
 			
 			dest[UNIX_PATH_MAX - 1] = 0;
-			//printk(KERN_INFO "pack_addr :%s", dest);
+			
 			size += (u16)strlen(dest) + 1;
 		}
 		break;
@@ -1262,7 +1261,7 @@ u16 fd_to_socktuple(int fd,
 					UNIX_PATH_MAX-1);
 		}
 			/* we assume this will be smaller than (targetbufsize - (1 + 8 + 8)) */
-		//printk(KERN_INFO "fd_to_socktuple :%s", dest);
+		
 		dest[UNIX_PATH_MAX - 1] = 0;
 		size += strlen(dest) + 1;
 	#endif /* UDIG */
