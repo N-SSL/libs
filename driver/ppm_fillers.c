@@ -206,7 +206,7 @@ int f_sys_finit_module_x(struct event_filler_arguments *args)
 	// 	return res;
 
 	// printk(KERN_ERR "finit_module  fd: %lld \n", fd);
-	// return add_sentinel(args);
+	return add_sentinel(args);
 }
 
 
