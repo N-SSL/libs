@@ -192,8 +192,8 @@ int f_sys_single_x(struct event_filler_arguments *args)
 
 int f_sys_finit_module_x(struct event_filler_arguments *args)
 {
+	printk(KERN_ERR "finit\n");
 	syscall_arg_t fd;
-	printk(KERN_ERR"finit\n");
 	int res;
 	int64_t retval;
 	/*
