@@ -1220,7 +1220,7 @@ const struct syscall_evt_pair g_syscall_ia32_table[SYSCALL_TABLE_SIZE] = {
 	[__NR_ia32_userfaultfd - SYSCALL_TABLE_ID0] =                {UF_USED | UF_NEVER_DROP, PPME_SYSCALL_USERFAULTFD_E, PPME_SYSCALL_USERFAULTFD_X},
 #endif
 #ifdef __NR_ia32_finit_module
-	[__NR_ia32_finit_module - SYSCALL_TABLE_ID0] =		{UF_USED | UF_NEVER_DROP, PPME_SYSCALL_FINITMODULE_E, PPME_SYSCALL_FINITMODULE_X},
+	[__NR_ia32_finit_module - SYSCALL_TABLE_ID0] =		         {UF_USED | UF_NEVER_DROP, PPME_SYSCALL_FINITMODULE_E, PPME_SYSCALL_FINITMODULE_X},
 #endif
 };
 
