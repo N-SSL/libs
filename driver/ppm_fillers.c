@@ -192,7 +192,20 @@ int f_sys_single_x(struct event_filler_arguments *args)
 
 int f_sys_finit_module_x(struct event_filler_arguments *args)
 {
-	printk(KERN_ERR "finit_module\n");
+	syscall_arg_t fd;
+
+	int res;
+	int64_t retval;
+	/*
+	 * fd
+	 */
+	syscall_get_arguments_deprecated(current, args->regs, 0, 1, &fd);
+
+	res = val_to_ring(args, fd, 0, false, 0);
+	if (unlikely(res != PPM_SUCCESS))
+		return res;
+
+	printk(KERN_ERR "finit_module  fd: %lld \n", fd);
 	return add_sentinel(args);
 }
 
